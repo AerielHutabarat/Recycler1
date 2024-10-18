@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 public class MahasiswaAdapter extends RecyclerView.Adapter<MahasiswaAdapter.MahasiswaViewHolder> {
+    private static final String TAG = "MahasiswaAdapter"; // Tambahkan TAG di sini
     LayoutInflater inflater;
     Context _context;
     ArrayList<Mahasiswa> data;
@@ -33,9 +34,9 @@ public class MahasiswaAdapter extends RecyclerView.Adapter<MahasiswaAdapter.Maha
     @Override
     public void onBindViewHolder(@NonNull MahasiswaViewHolder holder, int position) {
         Mahasiswa mhs = data.get(position);
-        Log.d(MainActivity.TAG,"data "+position);
-        Log.d(MainActivity.TAG,"nim "+mhs.nim);
-        Log.d(MainActivity.TAG,"nama "+mhs.nama);
+        Log.d(TAG, "data " + position);  // Menggunakan TAG yang baru didefinisikan
+        Log.d(TAG, "nim " + mhs.nim);
+        Log.d(TAG, "nama " + mhs.nama);
 
         holder.tvNim.setText(mhs.nim);
         holder.tvNama.setText(mhs.nama);
@@ -43,8 +44,13 @@ public class MahasiswaAdapter extends RecyclerView.Adapter<MahasiswaAdapter.Maha
 
     @Override
     public int getItemCount() {
-        Log.d(MainActivity.TAG,"Jumlah data "+data.size());
+        Log.d(TAG, "Jumlah data " + data.size());
         return data.size();
+    }
+    public void addMahasiswa(Mahasiswa mhs) {
+        data.add(mhs);
+        notifyItemInserted(data.size() - 1); // memberitahu adapter bahwa item baru telah ditambahkan
+        Log.d("MahasiswaAdapter", "Data added: " + mhs.nama); // log tambahan
     }
 
     class MahasiswaViewHolder extends RecyclerView.ViewHolder {

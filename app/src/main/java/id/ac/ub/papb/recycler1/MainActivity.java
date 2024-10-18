@@ -3,26 +3,22 @@ package id.ac.ub.papb.recycler1;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
+import android.database.Cursor;
+import android.widget.Toast;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
     RecyclerView rv1;
     Button btnAddData;
     MahasiswaAdapter adapter;
     ArrayList<Mahasiswa> data;
     EditText etNim, etNama;
-    public static String TAG = "RV1";
+    DBHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,13 +29,15 @@ public class MainActivity extends AppCompatActivity {
         btnAddData = findViewById(R.id.bt1);
         etNim = findViewById(R.id.etNim);
         etNama = findViewById(R.id.editTextTextPersonName2);
+        dbHelper = new DBHelper(this);
 
-        data = getData(); // Inisialisasi data awal
+        data = new ArrayList<>();
+        loadData(); // load data dari SQLite ke RecyclerView
+
         adapter = new MahasiswaAdapter(this, data);
         rv1.setAdapter(adapter);
         rv1.setLayoutManager(new LinearLayoutManager(this));
 
-        // Event listener untuk tombol tambah data
         btnAddData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -47,40 +45,42 @@ public class MainActivity extends AppCompatActivity {
                 String namaInput = etNama.getText().toString();
 
                 if (!nimInput.isEmpty() && !namaInput.isEmpty()) {
-                    // Tambahkan data baru
-                    Mahasiswa newMahasiswa = new Mahasiswa();
-                    newMahasiswa.nim = nimInput;
-                    newMahasiswa.nama = namaInput;
+                    boolean isInserted = dbHelper.insertData(nimInput, namaInput);
 
-                    // Tambahkan ke data dan beri tahu adapter bahwa data telah berubah
-                    data.add(newMahasiswa);
-                    adapter.notifyItemInserted(data.size() - 1); // Perbarui RecyclerView
+                    if (isInserted) {
+                        Mahasiswa newMahasiswa = new Mahasiswa();
+                        newMahasiswa.nim = nimInput;
+                        newMahasiswa.nama = namaInput;
 
-                    // Kosongkan input setelah disimpan
-                    etNim.setText("");
-                    etNama.setText("");
+                        data.add(newMahasiswa);
+                        adapter.notifyItemInserted(data.size() - 1);
 
-                    // Berikan feedback ke pengguna
-                    Toast.makeText(MainActivity.this, "Data berhasil ditambahkan", Toast.LENGTH_SHORT).show();
+                        etNim.setText("");
+                        etNama.setText("");
+
+                        Toast.makeText(MainActivity.this, "Data berhasil ditambahkan", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Gagal menambahkan data", Toast.LENGTH_SHORT).show();
+                    }
                 } else {
-                    // Berikan peringatan jika input kosong
                     Toast.makeText(MainActivity.this, "Harap isi NIM dan Nama", Toast.LENGTH_SHORT).show();
                 }
             }
         });
     }
 
-    public ArrayList<Mahasiswa> getData() {
-        ArrayList<Mahasiswa> data = new ArrayList<>();
-        List<String> nim = Arrays.asList(getResources().getStringArray(R.array.nim));
-        List<String> nama = Arrays.asList(getResources().getStringArray(R.array.nama));
-        for (int i = 0; i < nim.size(); i++) {
+    private void loadData() {
+        Cursor res = dbHelper.getAllData();
+        if (res.getCount() == 0) {
+            Toast.makeText(this, "Tidak ada data", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        while (res.moveToNext()) {
             Mahasiswa mhs = new Mahasiswa();
-            mhs.nim = nim.get(i);
-            mhs.nama = nama.get(i);
-            Log.d(TAG, "getData " + mhs.nim);
+            mhs.nim = res.getString(1); // kolom NIM
+            mhs.nama = res.getString(2); // kolom Nama
             data.add(mhs);
         }
-        return data;
     }
 }
